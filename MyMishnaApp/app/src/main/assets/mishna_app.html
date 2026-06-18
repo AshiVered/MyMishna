@@ -1026,11 +1026,91 @@
         font-size: 34px
       }
     }
+
+    /* SPLASH SCREEN */
+    .splash-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #fff;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      transition: opacity 0.3s ease-out;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    .splash-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 20vh;
+    }
+
+    .splash-logo {
+      width: 180px;
+      height: auto;
+      max-height: 180px;
+      object-fit: contain;
+      margin-bottom: 20px;
+    }
+
+    .splash-title {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    .splash-subtitle {
+      font-size: 18px;
+      color: var(--txt);
+      margin-bottom: 24px;
+    }
+
+    .splash-dedication {
+      font-size: 16px;
+      color: var(--txt2);
+      font-style: italic;
+    }
+
+    .splash-footer {
+      padding-bottom: 30px;
+      font-size: 14px;
+      color: var(--txt2);
+    }
+    
+    .splash-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
   <script src="hebcal.min.js"></script>
 </head>
 
 <body>
+  <div id="splash" class="splash-screen">
+    <div class="splash-content">
+      <img src="Eyal.jpeg" alt="לוגו" class="splash-logo">
+      <h1 class="splash-title">MyMishna</h1>
+      <p class="splash-subtitle">אפליקציית לימוד משניות יומי</p>
+    </div>
+    <div class="splash-footer">
+      פותח על ידי ראם מוטס ואשי ורד.
+    </div>
+  </div>
+  <script>
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('splash-hidden');
+        setTimeout(() => splash.remove(), 300);
+      }
+    }, 3000);
+  </script>
   <div id="app"></div>
   <button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
   <!-- CELEBRATION MODAL -->
@@ -1198,7 +1278,7 @@
       sel: { books: [], tractates: [] },
       pace: { type: 'mishna', amount: 3 },
       startDate: new Date().toISOString().slice(0, 10),
-      rev: { on: false, mode: 'frequency', freq: 7, weekdays: [], amount: 0, instead: false, unitTrigger: 'none', unitAmount: 0 },
+      rev: { on: false, mode: 'frequency', freq: 7, weekdays: [], amount: 0, instead: false, unitTrigger: 'none', unitAmount: 0, unitPaceType: '' },
       reminder: { on: false, time: '20:00' },
       darkMode: false,
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth() + 1,
@@ -1305,7 +1385,30 @@
         // Unit-review days (after finishing a chapter/tractate/seder) — highest priority,
         // paced at unitAmt/day until the WHOLE just-completed unit has been re-covered.
         if (unitQ.length > 0) {
-          const u = unitQ[0], from = u.start + unitPos, to = Math.min(u.end, from + unitAmt - 1);
+          const u = unitQ[0], from = u.start + unitPos;
+          let to = from;
+          const uPace = S.rev.unitPaceType || S.pace.type;
+          if (uPace === 'chapter' && S.pace.type === 'mishna') {
+            let cCount = 0, lastC = null;
+            for (let i = from; i <= u.end; i++) {
+              const curC = list[i].t + '|' + list[i].c;
+              if (curC !== lastC) {
+                if (cCount === unitAmt) break;
+                cCount++;
+                lastC = curC;
+              }
+              to = i;
+            }
+          } else if (uPace === 'mishna' && S.pace.type === 'chapter') {
+            let mCount = 0;
+            for (let i = from; i <= u.end; i++) {
+              mCount += list[i].cnt;
+              to = i;
+              if (mCount >= unitAmt) break;
+            }
+          } else {
+            to = Math.min(u.end, from + unitAmt - 1);
+          }
           const revSlice = list.slice(from, to + 1);
           map.set(jdn, { type: 'unit-review', items: [], revItems: revSlice, unitLabel: u.label, unitLevel: u.level });
           unitPos += revSlice.length;
@@ -1344,24 +1447,20 @@
       const list = getList(); if (!list.length || !S.startDate) return null;
       const total = list.length;
       const sched = getSchedCache();
-      let done = 0, completedTracts = new Set(), completedSedarim = new Set(), lastJdn = null, firstJdn = null;
+      let done = 0, completedTracts = new Set(), completedSedarim = new Set(), lastJdn = null, firstJdn = null, daysLeft = 0;
       for (const [jdn, e] of sched) {
         if (lastJdn === null || jdn > lastJdn) lastJdn = jdn;
         if (firstJdn === null || jdn < firstJdn) firstJdn = jdn;
-        if (S.done[jdn] && e.type.includes('study')) {
-          done += e.items.length;
-          if (e.completed) { for (const t of e.completed.tract) completedTracts.add(t); for (const s of e.completed.seder) completedSedarim.add(s); }
+        if (S.done[jdn]) {
+          if (e.type.includes('study')) {
+            done += e.items.length;
+            if (e.completed) { for (const t of e.completed.tract) completedTracts.add(t); for (const s of e.completed.seder) completedSedarim.add(s); }
+          }
+        } else {
+          daysLeft++;
         }
       }
       const pct = Math.min(100, Math.round(done / total * 100));
-      const t = new Date(), todayJDN = HC.gToJDN(t.getFullYear(), t.getMonth() + 1, t.getDate());
-      // daysLeft = actual remaining calendar days in the real schedule (includes every review/
-      // instead day), anchored to today — not a naive remaining-content÷pace estimate.
-      let daysLeft = 0;
-      if (lastJdn !== null) {
-        const fromJDN = Math.max(todayJDN, firstJdn);
-        daysLeft = Math.max(0, lastJdn - fromJDN + 1);
-      }
       return { total, done, pct, daysLeft, completedTracts: completedTracts.size, completedSedarim: completedSedarim.size };
     }
     // ============================================================
@@ -1508,7 +1607,7 @@ ${renderStats()}
  <button class="cal-act-btn" onclick="goToday()">היום</button>
  <input type="date" class="jump-input" onchange="jumpDate(this.value)" placeholder="קפוץ לתאריך">
  <button class="cal-act-btn" onclick="S.screen='wizard';S.step=1;render()">ערוך</button>
- <button class="cal-act-btn" onclick="toggleDark()">🌙</button>
+
 </div>
 <div class="cal-days-hdr">
  <div class="cal-day-name">א׳</div><div class="cal-day-name">ב׳</div>
@@ -1701,8 +1800,15 @@ ${renderStats()}
     <div class="radio-item ${r.unitTrigger === 'seder' ? 'sel' : ''}" onclick="S.rev.unitTrigger='seder';saveS();render()">אחרי סדר</div>
    </div>
    ${r.unitTrigger && r.unitTrigger !== 'none' ? `
+   <div style="padding:10px 0 4px;border-bottom:1px solid var(--border)">
+    <div class="toggle-sub" style="margin-bottom:6px">סוג חזרה מתקדמת:</div>
+    <div class="radio-group" style="padding:0 0 8px">
+     <div class="radio-item ${(!r.unitPaceType || r.unitPaceType === 'mishna') ? 'sel' : ''}" onclick="S.rev.unitPaceType='mishna';saveS();render()">משניות</div>
+     <div class="radio-item ${r.unitPaceType === 'chapter' ? 'sel' : ''}" onclick="S.rev.unitPaceType='chapter';saveS();render()">פרקים</div>
+    </div>
+   </div>
    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-    <span style="font-size:13px;color:var(--txt2)">כמות לחזרה ביום (${ptype}):</span>
+    <span style="font-size:13px;color:var(--txt2)">כמות לחזרה ביום (${(!r.unitPaceType || r.unitPaceType === 'mishna') ? 'משניות' : 'פרקים'}):</span>
     <div style="display:flex;align-items:center;gap:8px">
      <button class="cnt-btn" style="width:30px;height:30px;font-size:16px" onclick="S.rev.unitAmount=Math.max(0,S.rev.unitAmount-1);saveS();render()">−</button>
      <span style="font-size:18px;font-weight:800;color:var(--blue);min-width:44px;text-align:center">${r.unitAmount === 0 ? 'כמו הלימוד היומי' : (r.unitAmount || pa)}</span>
