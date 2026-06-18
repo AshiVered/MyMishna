@@ -1,0 +1,70 @@
+[
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/xml_data_extraction_rules.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/drawable_ic_launcher_background.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/drawable_ic_notification.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/drawable/ic_notification.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/xml_backup_rules.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "aiv.reem.mymishna.app-merged_res-21:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "aiv.reem.mymishna.app-main-23:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    }
+]

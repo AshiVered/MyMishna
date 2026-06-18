@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MyMishna</string>
+    <string name="notification_channel_name">תזכורת לימוד משניות</string>
+    <string name="notification_title">זמן ללמוד משניות! 📚</string>
+    <string name="notification_body">הגיע הזמן ללימוד היומי שלך.</string>
+</resources>
