@@ -30,3 +30,5 @@ log3.txt
 # Backups
 *.bak
 MyMishnaApp/.idea/
+MyMishnaApp/app/release/app-release.apk
+MyMishnaApp/app/release/output-metadata.json
