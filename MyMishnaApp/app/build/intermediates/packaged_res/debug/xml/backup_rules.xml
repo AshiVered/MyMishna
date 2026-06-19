@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<full-backup-content>
-    <!-- שומרים את ה-SharedPreferences של ה-Alarm בגיבוי -->
-    <include domain="sharedpref" path="mishna_alarm_prefs.xml" />
-</full-backup-content>

@@ -1,4 +1,0 @@
-aiv.reem.mymishna.test.app-androidTest-0 /home/ashi/Desktop/MishnaApp/MyMishnaApp/app/build/generated/res/resValues/androidTest/debug
-aiv.reem.mymishna.test.app-mergeDebugAndroidTestResources-1 /home/ashi/Desktop/MishnaApp/MyMishnaApp/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
-aiv.reem.mymishna.test.app-mergeDebugAndroidTestResources-2 /home/ashi/Desktop/MishnaApp/MyMishnaApp/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
-aiv.reem.mymishna.test.app-merged_res-3 /home/ashi/Desktop/MishnaApp/MyMishnaApp/app/build/intermediates/merged_res/debugAndroidTest
