@@ -1087,6 +1087,39 @@
       opacity: 0;
       pointer-events: none;
     }
+
+    /* ── DAY DETAIL MODAL ── */
+    #dayModal{position:fixed;inset:0;z-index:2000;display:none;flex-direction:column;justify-content:flex-end}
+    #dayModal.show{display:flex}
+    .dm-bg{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+    .dm-sheet{position:relative;background:var(--card);border-radius:20px 20px 0 0;max-height:90vh;display:flex;flex-direction:column;z-index:1;animation:dmUp .25s ease}
+    @keyframes dmUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .dm-hdr{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--blue);border-radius:20px 20px 0 0;flex-shrink:0}
+    .dm-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .dm-title{flex:1;text-align:center;color:#fff;font-size:12px;font-weight:700;line-height:1.4}
+    .dm-done-btn{background:rgba(255,255,255,.25);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+    .dm-done-btn.done{background:var(--green)}
+    .dm-body{overflow-y:auto;padding:10px 14px 40px;flex:1}
+    .dm-empty,.dm-loading{text-align:center;padding:40px 20px;color:var(--txt2);font-size:14px}
+    .dm-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:6px 0 4px;background:#e3f2fd;color:var(--blue)}
+    .dm-tract-hdr{font-size:15px;font-weight:800;color:var(--blue);margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+    .dm-mishna-block{padding:10px 0;border-bottom:1px solid var(--border)}
+    .dm-mishna-block:last-child{border-bottom:none}
+    .dm-mishna-ref{font-size:10px;font-weight:700;color:var(--txt2);margin-bottom:5px;letter-spacing:.3px}
+    .dm-mishna-text{font-size:15px;line-height:1.8;color:var(--txt);direction:rtl;text-align:right}
+    .dm-cmt-btn{display:flex;align-items:center;gap:4px;width:100%;background:none;border:1px solid var(--border);border-radius:7px;padding:5px 10px;margin-top:7px;font-size:11px;color:var(--txt2);cursor:pointer;text-align:right;direction:rtl}
+    .dm-cmt-btn:hover{background:var(--bg)}
+    .dm-cmt-text{font-size:13px;line-height:1.7;color:var(--txt);padding:8px 12px;margin-top:4px;background:var(--bg);border-radius:8px;border-right:3px solid var(--orange);direction:rtl;text-align:right;display:none}
+    .dm-cmt-text.kehati{border-right-color:#8e44ad}
+    .dm-kehati-link{display:flex;align-items:center;gap:6px;width:100%;background:none;border:1px solid #8e44ad;border-radius:7px;padding:6px 10px;margin-top:7px;font-size:11px;color:#8e44ad;cursor:pointer;text-decoration:none;font-weight:600;direction:rtl}
+    .dm-kehati-link:hover{background:#f3e5f5}
+    .dm-cmt-text.open{display:block}
+    .dm-offline{color:#e74c3c;font-size:12px;font-style:italic}
+    /* Mini done-button on cell corner */
+    .cell-chk{position:absolute;left:2px;bottom:2px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--green);background:rgba(255,255,255,.85);color:var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;font-size:9px;font-weight:800;line-height:1}
+    .done-cell .cell-chk{background:var(--green);color:#fff;border-color:var(--green)}
+    body.dark .dm-cmt-text{background:rgba(255,255,255,.05)}
+
   </style>
   <script src="hebcal.min.js"></script>
 </head>
@@ -1126,6 +1159,18 @@
       </div>
     </div>
   </div>
+  <!-- DAY DETAIL MODAL -->
+  <div id="dayModal">
+    <div class="dm-bg" onclick="closeDayModal()"></div>
+    <div class="dm-sheet">
+      <div class="dm-hdr">
+        <button class="dm-close" onclick="closeDayModal()">✕</button>
+        <div id="dmTitle" class="dm-title"></div>
+        <button id="dmDoneBtn" class="dm-done-btn" onclick="toggleDmDone()">◻ סמן כנלמד</button>
+      </div>
+      <div id="dmBody" class="dm-body"><div class="dm-loading">⏳ טוען...</div></div>
+    </div>
+  </div>
   <script>
     // ============================================================
     // MISHNA DATA
@@ -1134,7 +1179,7 @@
       "זרעים": { "ברכות": [5, 8, 6, 7, 5, 8, 5, 8, 5], "פאה": [6, 8, 8, 11, 8, 11, 8, 9], "דמאי": [4, 5, 6, 7, 11, 12, 8], "כלאים": [9, 11, 7, 9, 8, 9, 8, 6, 10], "שביעית": [8, 10, 10, 10, 9, 6, 7, 11, 9, 9], "תרומות": [10, 6, 9, 13, 9, 6, 7, 12, 7, 12, 10], "מעשרות": [8, 8, 10, 6, 8], "מעשר שני": [7, 10, 13, 12, 15], "חלה": [9, 8, 10, 11], "ערלה": [9, 17, 9], "ביכורים": [11, 11, 12, 5] },
       "מועד": { "שבת": [11, 7, 6, 2, 4, 10, 4, 7, 7, 6, 6, 6, 7, 4, 3, 8, 8, 3, 6, 5, 3, 6, 5, 5], "עירובין": [10, 6, 9, 11, 9, 10, 11, 11, 4, 15], "פסחים": [7, 8, 8, 9, 10, 6, 13, 8, 11, 9], "שקלים": [7, 5, 4, 9, 6, 6, 7, 8], "יומא": [8, 7, 11, 6, 7, 8, 5, 9], "סוכה": [11, 9, 15, 10, 8], "ביצה": [10, 10, 8, 7, 7], "ראש השנה": [9, 9, 8, 9], "תענית": [7, 10, 9, 8], "מגילה": [11, 6, 6, 10], "מועד קטן": [10, 5, 9], "חגיגה": [8, 7, 8] },
       "נשים": { "יבמות": [4, 10, 10, 13, 6, 6, 6, 6, 6, 9, 7, 6, 13, 9, 10, 7], "כתובות": [10, 10, 9, 12, 9, 7, 10, 8, 9, 6, 6, 4, 11], "נדרים": [4, 5, 11, 8, 6, 10, 9, 7, 10, 8, 12], "נזיר": [7, 10, 7, 7, 7, 11, 4, 2, 5], "סוטה": [9, 6, 8, 5, 5, 4, 8, 7, 15], "גיטין": [6, 7, 8, 9, 9, 7, 9, 10, 10], "קידושין": [10, 10, 13, 14] },
-      "נזיקין": { "בבא קמא": [4, 6, 11, 9, 7, 6, 7, 7, 12, 10], "בבא מציעא": [8, 11, 12, 12, 11, 8, 11, 9, 13, 6], "בבא בתרא": [6, 14, 8, 9, 11, 8, 4, 8, 10, 8], "סנהדרין": [6, 5, 8, 5, 5, 6, 11, 7, 6, 6, 6], "מכות": [10, 8, 16], "שבועות": [7, 5, 11, 13, 5, 7, 8, 6], "עדויות": [14, 10, 12, 12, 7, 3, 9, 7], "עבודה זרה": [9, 7, 10, 12, 12], "אבות": [18, 16, 18, 22, 23, 11], "הוריות": [5, 7, 8] },
+      "נזיקין": { "בבא קמא": [4, 6, 11, 9, 7, 6, 7, 7, 12, 10], "בבא מציעא": [8, 11, 12, 12, 11, 8, 11, 9, 13, 6], "בבא בתרא": [6, 14, 8, 9, 11, 8, 4, 8, 10, 8], "סנהדרין": [6, 5, 8, 5, 5, 6, 11, 7, 6, 6, 6], "מכות": [10, 8, 16], "שבועות": [7, 5, 11, 13, 5, 7, 8, 6], "עדויות": [14, 10, 12, 12, 7, 3, 9, 7], "עבודה זרה": [9, 7, 10, 12, 12], "אבות": [18, 16, 18, 22, 23, 11], "הוריות": [8, 7, 5] },
       "קדשים": { "זבחים": [4, 5, 6, 6, 8, 7, 6, 12, 7, 8, 8, 6, 8, 10], "מנחות": [4, 5, 7, 5, 9, 7, 6, 7, 9, 9, 9, 5, 11], "חולין": [7, 10, 7, 7, 5, 7, 6, 6, 8, 4, 2, 5], "בכורות": [7, 9, 4, 10, 6, 12, 7, 10, 8], "ערכין": [4, 6, 5, 4, 6, 5, 5, 7, 8], "תמורה": [6, 3, 5, 4, 6, 5, 6], "כריתות": [7, 6, 10, 3, 8, 9], "מעילה": [4, 9, 8, 6, 5, 6], "תמיד": [4, 5, 9, 3, 6, 3, 4], "מידות": [9, 6, 8, 7, 4], "קינים": [4, 5, 6] },
       "טהרות": { "כלים": [9, 8, 8, 4, 11, 4, 6, 11, 8, 8, 9, 8, 8, 8, 6, 8, 17, 9, 10, 7, 3, 10, 5, 17, 9, 9, 12, 10, 8, 4], "אהלות": [8, 7, 7, 3, 7, 7, 6, 6, 16, 7, 9, 8, 6, 7, 10, 5, 5, 10], "נגעים": [6, 5, 8, 11, 5, 8, 5, 10, 3, 10, 12, 7, 12, 13], "פרה": [4, 5, 11, 4, 9, 5, 12, 11, 9, 6, 9, 11], "טהרות": [9, 8, 8, 13, 9, 10, 9, 9, 9, 8], "מקואות": [8, 10, 4, 5, 6, 11, 7, 5, 7, 8], "נדה": [7, 7, 7, 7, 9, 14, 5, 4, 11, 8], "מכשירין": [6, 11, 8, 10, 11, 8], "זבים": [6, 4, 3, 7, 12], "טבול יום": [5, 8, 6, 7], "ידיים": [5, 4, 5, 8], "עוקצין": [6, 10, 12] }
     };
@@ -1275,11 +1320,13 @@
     // ============================================================
     let S = {
       screen: 'wizard', step: 1,
+      hasCompletedSetup: false,
       sel: { books: [], tractates: [] },
       pace: { type: 'mishna', amount: 3 },
       startDate: new Date().toISOString().slice(0, 10),
-      rev: { on: false, mode: 'frequency', freq: 7, weekdays: [], amount: 0, instead: false, unitTrigger: 'none', unitAmount: 0, unitPaceType: '' },
+      rev: { on: false, mode: 'weekdays', freq: 7, weekdays: [], amount: 0, instead: false, unitTrigger: 'none', unitAmount: 0, unitPaceType: '' },
       reminder: { on: false, time: '20:00' },
+      commentaries: { bartenura: true, rambam: false, tosafotYT: false, ikarTYT: false, tiferetIsrael: false, kehatiLink: false },
       darkMode: false,
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth() + 1,
       done: {}
@@ -1290,7 +1337,7 @@
         const d = localStorage.getItem(SKEY);
         if (d) {
           const p = JSON.parse(d);
-          S = { ...S, ...p, rev: { ...S.rev, ...(p.rev || {}) }, reminder: { ...S.reminder, ...(p.reminder || {}) } };
+          S = { ...S, ...p, rev: { ...S.rev, ...(p.rev || {}) }, reminder: { ...S.reminder, ...(p.reminder || {}) }, commentaries: { ...S.commentaries, ...(p.commentaries || {}) } };
           // Migrate the older afterTractate/afterDays shape, if found, to the new unitTrigger system.
           if (p.rev && p.rev.afterTractate && (!p.rev.unitTrigger || p.rev.unitTrigger === 'none')) { S.rev.unitTrigger = 'tractate'; S.rev.unitAmount = 0; }
         }
@@ -1447,20 +1494,25 @@
       const list = getList(); if (!list.length || !S.startDate) return null;
       const total = list.length;
       const sched = getSchedCache();
-      let done = 0, completedTracts = new Set(), completedSedarim = new Set(), lastJdn = null, firstJdn = null, daysLeft = 0;
+      let done = 0, completedTracts = new Set(), completedSedarim = new Set(), lastJdn = null, firstJdn = null;
       for (const [jdn, e] of sched) {
         if (lastJdn === null || jdn > lastJdn) lastJdn = jdn;
         if (firstJdn === null || jdn < firstJdn) firstJdn = jdn;
-        if (S.done[jdn]) {
-          if (e.type.includes('study')) {
-            done += e.items.length;
-            if (e.completed) { for (const t of e.completed.tract) completedTracts.add(t); for (const s of e.completed.seder) completedSedarim.add(s); }
-          }
-        } else {
-          daysLeft++;
+        if (S.done[jdn] && e.type.includes('study')) {
+          done += e.items.length;
+          if (e.completed) { for (const t of e.completed.tract) completedTracts.add(t); for (const s of e.completed.seder) completedSedarim.add(s); }
         }
       }
       const pct = Math.min(100, Math.round(done / total * 100));
+      // daysLeft = actual remaining CALENDAR days in the real schedule (already accounts for
+      // every review/instead day), anchored to today. It reflects the plan's fixed structure,
+      // not personal progress — marking past days done must NOT change this number.
+      const t = new Date(), todayJDN = HC.gToJDN(t.getFullYear(), t.getMonth() + 1, t.getDate());
+      let daysLeft = 0;
+      if (lastJdn !== null) {
+        const fromJDN = Math.max(todayJDN, firstJdn);
+        daysLeft = Math.max(0, lastJdn - fromJDN + 1);
+      }
       return { total, done, pct, daysLeft, completedTracts: completedTracts.size, completedSedarim: completedSedarim.size };
     }
     // ============================================================
@@ -1522,15 +1574,17 @@
       if (hol) { const tc = hol.type === 'rch' ? 'tag-rch' : 'tag-holiday'; tags += `<div class="cell-tag ${tc}">${hol.name}</div>`; }
       if (par) tags += `<div class="cell-tag tag-parasha">פ׳ ${par}</div>`;
       const starH = hasCompletion ? `<span class="cell-star">⭐</span>` : '';
-      return `<div class="${cls}" onclick="tapCell(${jdn})">
+      const chkBtn = sch ? `<span class="cell-chk" onclick="quickDone(${jdn},event)">${isDone?'✓':'◻'}</span>` : '';
+      return `<div class="${cls}" onclick="openDayModal(${jdn})">
   <span class="cell-heb">${fHebDay(h)}</span>
   <span class="cell-greg">${g.d}</span>
   <div class="cell-dayname">${DH[dow]}</div>
   ${content}${tags}
-  ${isDone ? '<span class="cell-done">✓</span>' : ''}${starH}
+  ${chkBtn}${starH}
  </div>`;
     }
-    function tapCell(jdn) {
+    function quickDone(jdn, e) {
+      e.stopPropagation();
       if (S.done[jdn]) delete S.done[jdn]; else S.done[jdn] = 1;
       saveS();
       const sch = getDaySched(jdn);
@@ -1606,7 +1660,7 @@ ${renderStats()}
 <div class="cal-actions">
  <button class="cal-act-btn" onclick="goToday()">היום</button>
  <input type="date" class="jump-input" onchange="jumpDate(this.value)" placeholder="קפוץ לתאריך">
- <button class="cal-act-btn" onclick="S.screen='wizard';S.step=1;render()">ערוך</button>
+ <button class="cal-act-btn" onclick="enterWizard(1)">ערוך</button>
 
 </div>
 <div class="cal-days-hdr">
@@ -1769,8 +1823,8 @@ ${renderStats()}
   <div style="padding:10px 0 4px;border-bottom:1px solid var(--border)">
    <div class="toggle-label" style="margin-bottom:8px">סוג תזמון:</div>
    <div class="radio-group" style="padding:0 0 8px">
+    <div class="radio-item ${r.mode === 'weekdays' ? 'sel' : ''}" onclick="S.rev.mode='weekdays';saveS();render()">ימים קבועים בשבוע</div>
     <div class="radio-item ${r.mode === 'frequency' ? 'sel' : ''}" onclick="S.rev.mode='frequency';saveS();render()">כל X ימים</div>
-    <div class="radio-item ${r.mode === 'weekdays' ? 'sel' : ''}" onclick="S.rev.mode='weekdays';saveS();render()"> ימים קבועים בשבוע</div>
    </div>
    ${r.mode === 'frequency' ? `
    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
@@ -1837,68 +1891,59 @@ ${renderStats()}
     // ============================================================
     function renderStep4() {
       const r = S.reminder;
-      const permState = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+      const cmtsRows = CMTS.map(c =>
+        `<div class="toggle-row">
+          <div>
+            <div class="toggle-label">${c.label}</div>
+            <div class="toggle-sub">${c.sub}</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${S.commentaries[c.key] ? 'checked' : ''} onchange="toggleCmt_setting('${c.key}',this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>`
+      ).join('') + `<div class="toggle-row">
+          <div>
+            <div class="toggle-label">קהתי 🔗</div>
+            <div class="toggle-sub">קהתי שמור בזכויות יוצרים ("משניות קהתי בע\"מ") — הטקסט לא ניתן להטמעה, אך אפשר להציג כפתור שפותח אותו במקור חיצוני מורשה עבור אותה משנה בדיוק</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${S.commentaries.kehatiLink ? 'checked' : ''} onchange="toggleCmt_setting('kehatiLink',this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>`;
       return `<div class="wiz-body">
- <div class="step-title">שלב 4: תזכורות</div>
- <div class="step-sub">האם לקבל תזכורות ללמוד?</div>
+ <div class="step-title">שלב 4: תזכורות ופרשנים</div>
+ <div class="step-sub">הגדר תזכורות יומיות ואיזה פרשנים להציג</div>
+
  <div class="card">
   <div class="toggle-row">
    <div><div class="toggle-label">הפעל תזכורות</div><div class="toggle-sub">קבל תזכורת יומית בשעה שתבחר</div></div>
    <label class="switch"><input type="checkbox" ${r.on ? 'checked' : ''} onchange="toggleReminder(this.checked)"><span class="slider"></span></label>
   </div>
   ${r.on ? `<div style="padding:10px 0"><label class="date-label">שעת תזכורת:</label>
-  <input type="time" style="width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;font-size:18px;text-align:center;direction:ltr;outline:none;background:var(--card);color:var(--txt);margin-top:6px" value="${r.time}" onchange="S.reminder.time=this.value;saveS()"></div>
-  <div style="padding:8px 0">
-   <button class="cal-act-btn" style="width:100%" onclick="testNotification()">🔔 שלח התראת בדיקה עכשיו</button>
-  </div>
-  <div class="toggle-sub" style="line-height:1.6;padding-top:4px">
-   ${permState === 'denied' ? '⚠️ ההתראות חסומות בדפדפן/באפליקציה. יש לאשר התראות בהגדרות המכשיר.' :
-            permState === 'unsupported' ? '⚠️ התראות אינן נתמכות בסביבה זו.' :
-              '⚠️ חשוב לדעת: התראה זו תיפתח רק כשהאפליקציה פתוחה (אפילו ברקע). אנדרואיד עלול לסגור אפליקציות WebView לאחר זמן ולמנוע התראה אם האפליקציה נסגרה לחלוטין. לתזכורת מובטחת 100%, מומלץ להוסיף גם תזכורת/אלארם קבועה באפליקציית השעון של הטלפון.'}
-  </div>`: ''}
+  <input type="time" style="width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;font-size:18px;text-align:center;direction:ltr;outline:none;background:var(--card);color:var(--txt);margin-top:6px" value="${r.time}" onchange="S.reminder.time=this.value;saveS()"></div>`: ''}
  </div>
+
+ <div class="card">
+  <div style="font-size:14px;font-weight:800;color:var(--blue);margin-bottom:10px">📖 פרשנים להצגה בלחיצה על יום</div>
+  <div class="toggle-sub" style="margin-bottom:10px">בחר אילו פרשנים יופיעו כשתלחץ על יום בלוח (הטקסטים נטענים מספריא)</div>
+  ${cmtsRows}
+ </div>
+
  </div>
  <div class="nav-row">
   <button class="btn btn-back" onclick="S.step=3;render()">← חזור</button>
   <button class="btn btn-next" onclick="S.step=5;saveS();render()">הבא →</button>
  </div>`;
     }
+    function toggleCmt_setting(key, val) {
+      S.commentaries[key] = val;
+      saveS();
+    }
     function toggleReminder(checked) {
-      S.reminder.on = checked; saveS();
-      if (checked) requestNotifPermission();
-      render();
+      S.reminder.on = checked; saveS(); render();
     }
-    function requestNotifPermission() {
-      if (typeof Notification === 'undefined') return;
-      if (Notification.permission === 'default') Notification.requestPermission().then(() => { startReminderLoop(); render(); });
-      else startReminderLoop();
-    }
-    function testNotification() {
-      if (typeof Notification === 'undefined') { alert('התראות אינן נתמכות בסביבה זו'); return; }
-      if (Notification.permission === 'granted') {
-        new Notification('זמן ללמוד משניות! 📖', { body: 'זוהי התראת בדיקה — כך תיראה התזכורת היומית שלך.' });
-      } else if (Notification.permission === 'default') {
-        Notification.requestPermission().then(p => { if (p === 'granted') new Notification('זמן ללמוד משניות! 📖', { body: 'זוהי התראת בדיקה.' }); else alert('יש לאשר הרשאת התראות כדי לקבל תזכורות'); });
-      } else {
-        alert('התראות חסומות. יש לאשר אותן בהגדרות האפליקציה/המכשיר.');
-      }
-    }
-    let _reminderInterval = null, _lastFiredDate = null;
-    function startReminderLoop() {
-      if (_reminderInterval) clearInterval(_reminderInterval);
-      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-      _reminderInterval = setInterval(() => {
-        if (!S.reminder.on) return;
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
-        const today = now.toDateString();
-        if (hh + ':' + mm === S.reminder.time && _lastFiredDate !== today) {
-          _lastFiredDate = today;
-          new Notification('זמן ללמוד משניות! 📖', { body: 'הגיע הזמן ללימוד היומי שלך.' });
-        }
-      }, 20000);
-    }
-    if (S.reminder.on && typeof Notification !== 'undefined' && Notification.permission === 'granted') startReminderLoop();
     // ============================================================
     // STEP 5 — SUMMARY
     // ============================================================
@@ -1923,6 +1968,7 @@ ${renderStats()}
   <div class="sum-row"><span class="sum-key">חזרות</span><span class="sum-val">${revStr}</span></div>
   ${unitLbl ? `<div class="sum-row"><span class="sum-key">חזרה מתקדמת</span><span class="sum-val">${unitLbl}</span></div>` : ''}
   <div class="sum-row"><span class="sum-key">תזכורות</span><span class="sum-val">${S.reminder.on ? 'כן – ' + S.reminder.time : 'לא'}</span></div>
+  <div class="sum-row"><span class="sum-key">פרשנים</span><span class="sum-val">${[...CMTS.filter(c=>S.commentaries[c.key]).map(c=>c.label), ...(S.commentaries.kehatiLink?['קהתי (קישור)']:[])].join(', ')||'ללא'}</span></div>
   <div class="sum-row"><span class="sum-key">תאריך התחלה</span><span class="sum-val">${S.startDate}</span></div>
  </div>
  <div style="text-align:center;font-size:12px;color:var(--txt2);padding:8px">לאחר השמירה יוצג הלוח עם לימוד יומי</div>
@@ -1932,7 +1978,49 @@ ${renderStats()}
   <button class="btn btn-save" onclick="saveAndGo()">✓ שמור תוכנית</button>
  </div>`;
     }
-    function saveAndGo() { resetList(); S.screen = 'calendar'; saveS(); render(); }
+    function saveAndGo() {
+      resetList();
+      S.screen = 'calendar';
+      S.hasCompletedSetup = true;
+      _wizardSnapshot = null;
+      saveS();
+      exitWizardHistory();
+      render();
+    }
+    // ============================================================
+    // WIZARD CANCEL / BACK-TO-EXISTING-PLAN
+    // ============================================================
+    let _wizardSnapshot = null;
+    let _suppressPop = false;
+    function enterWizard(step) {
+      _wizardSnapshot = JSON.parse(JSON.stringify(S));
+      S.screen = 'wizard'; S.step = step || 1;
+      try { history.pushState({ mishnaWizard: true }, '', ''); } catch (e) { }
+      render();
+    }
+    function exitWizardHistory() {
+      try {
+        if (history.state && history.state.mishnaWizard) {
+          _suppressPop = true;
+          history.back();
+        }
+      } catch (e) { }
+    }
+    function confirmCancelWizard() {
+      if (confirm('כל השינויים שעשית כרגע יימחקו, והתוכנית תחזור למצב השמור האחרון. להמשיך?')) cancelWizard();
+    }
+    function cancelWizard() {
+      if (_wizardSnapshot) { S = _wizardSnapshot; _wizardSnapshot = null; }
+      else { S.screen = 'calendar'; }
+      resetList();
+      saveS();
+      exitWizardHistory();
+      render();
+    }
+    window.addEventListener('popstate', function () {
+      if (_suppressPop) { _suppressPop = false; return; }
+      if (S.screen === 'wizard') cancelWizard();
+    });
     // ============================================================
     // RENDER
     // ============================================================
@@ -1953,14 +2041,232 @@ ${renderStats()}
         app.innerHTML = `<div class="hdr"><span style="width:40px"></span><span class="hdr-title">לוח לימוד משניות</span><button class="hdr-btn" onclick="toggleDark()">${S.darkMode ? '☀️' : '🌙'}</button></div>` + renderCalendar();
         document.getElementById('topBtn').style.display = 'flex';
       } else {
-        const back = S.step > 1 ? `<button class="hdr-btn" onclick="S.step--;render()">←</button>` : `<span style="width:56px"></span>`;
-        app.innerHTML = `<div class="hdr">${back}<span class="hdr-title">ערוך תוכנית לימוד</span><button class="hdr-btn" onclick="toggleDark()">${S.darkMode ? '☀️' : '🌙'}</button></div>` + renderProg(S.step) + (STEPS[S.step] || renderStep1)();
+        const topBtn = S.hasCompletedSetup ? `<button class="hdr-btn" onclick="confirmCancelWizard()">✕ ביטול</button>` : `<span style="width:56px"></span>`;
+        app.innerHTML = `<div class="hdr">${topBtn}<span class="hdr-title">ערוך תוכנית לימוד</span><button class="hdr-btn" onclick="toggleDark()">${S.darkMode ? '☀️' : '🌙'}</button></div>` + renderProg(S.step) + (STEPS[S.step] || renderStep1)();
         document.getElementById('topBtn').style.display = 'none';
         // Re-open expanded book panels
         for (const [s] of ORDER) { const tl = document.getElementById('tl-' + s); if (tl && (S.sel.books.includes(s) || ORDER.find(([x, ts]) => x === s && ts.some(t => S.sel.tractates.includes(t))))) { tl.classList.add('open'); const bt = document.getElementById('bt-' + s); if (bt) bt.textContent = '▴'; } }
       }
       window.scrollTo(0, 0);
     }
+
+    // ============================================================
+    // SEFARIA TEXT ENGINE — Hebrew names → Sefaria API refs
+    // ============================================================
+    const SEFARIA_NAMES = {
+      'ברכות':'Berakhot','פאה':'Peah','דמאי':'Demai','כלאים':'Kilayim',
+      'שביעית':'Sheviit','תרומות':'Terumot','מעשרות':'Maasrot','מעשר שני':'Maaser_Sheni',
+      'חלה':'Challah','ערלה':'Orlah','ביכורים':'Bikkurim',
+      'שבת':'Shabbat','עירובין':'Eruvin','פסחים':'Pesachim','שקלים':'Shekalim',
+      'יומא':'Yoma','סוכה':'Sukkah','ביצה':'Beitzah','ראש השנה':'Rosh_Hashanah',
+      'תענית':'Taanit','מגילה':'Megillah','מועד קטן':'Moed_Katan','חגיגה':'Chagigah',
+      'יבמות':'Yevamot','כתובות':'Ketubot','נדרים':'Nedarim','נזיר':'Nazir',
+      'סוטה':'Sotah','גיטין':'Gittin','קידושין':'Kiddushin',
+      'בבא קמא':'Bava_Kamma','בבא מציעא':'Bava_Metzia','בבא בתרא':'Bava_Batra',
+      'סנהדרין':'Sanhedrin','מכות':'Makkot','שבועות':'Shevuot',
+      'עדויות':'Eduyot','עבודה זרה':'Avodah_Zarah','אבות':'Avot','הוריות':'Horayot',
+      'זבחים':'Zevachim','מנחות':'Menachot','חולין':'Chullin','בכורות':'Bekhorot',
+      'ערכין':'Arakhin','תמורה':'Temurah','כריתות':'Keritot','מעילה':'Meilah',
+      'תמיד':'Tamid','מידות':'Middot','קינים':'Kinnim',
+      'כלים':'Kelim','אהלות':'Oholot','נגעים':'Negaim','פרה':'Parah',
+      'טהרות':'Tahorot','מקואות':'Mikvaot','נדה':'Niddah','מכשירין':'Makhshirin',
+      'זבים':'Zavim','טבול יום':'Tevul_Yom','ידיים':'Yadayim','עוקצין':'Oktzin'
+    };
+    // In-memory cache: key = "tractate|chapter|type"
+    const SC = {};
+    // All available Sefaria commentaries (verified present in Sefaria's library)
+    const CMTS = [
+      { key: 'bartenura',      label: 'ברטנורא',          sub: 'רבי עובדיה מברטנורא',        sfPrefix: 'Bartenura_on_Mishnah',          sfAvot: 'Bartenura_on_Pirkei_Avot' },
+      { key: 'rambam',         label: 'רמב"ם',             sub: 'פירוש המשנה לרמב"ם',          sfPrefix: 'Rambam_on_Mishnah',             sfAvot: 'Rambam_on_Pirkei_Avot' },
+      { key: 'tosafotYT',      label: `תוספות יו"ט`,       sub: 'רבי יום טוב ליפמן הלר',       sfPrefix: 'Tosafot_Yom_Tov_on_Mishnah',    sfAvot: 'Tosafot_Yom_Tov_on_Pirkei_Avot' },
+      { key: 'ikarTYT',        label: `עיקר תוס' יו"ט`,   sub: 'קיצור תוספות יום טוב',        sfPrefix: 'Ikar_Tosafot_Yom_Tov_on_Mishnah', sfAvot: null },
+      { key: 'tiferetIsrael',  label: 'תפארת ישראל (יכין)', sub: 'רבי ישראל ליפשיץ — ביאור קצר', sfPrefix: 'Yachin_on_Mishnah',            sfAvot: null },
+    ];
+    // Mishnah text: fetched once per CHAPTER (efficient, and Sefaria's chapter-level
+    // response for plain Mishnah text is reliably he[mishna_idx] = "string", no nesting).
+    async function _sfFetchMishnahText(tractate, chapter) {
+      const k = tractate + '|' + chapter + '|mishna';
+      if (SC[k] !== undefined) return SC[k];
+      try {
+        const c = localStorage.getItem('sf5_' + k);
+        if (c) { SC[k] = JSON.parse(c); return SC[k]; }
+      } catch (e) { }
+      const en = SEFARIA_NAMES[tractate]; if (!en) { SC[k] = null; return null; }
+      const isAvot = en === 'Avot';
+      const mRef = isAvot ? 'Pirkei_Avot' : 'Mishnah_' + en;
+      const url = 'https://www.sefaria.org/api/texts/' + mRef + '.' + chapter + '?lang=he';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) { SC[k] = null; return null; }
+        const data = await res.json();
+        const raw = data.he;
+        let arr = null;
+        if (Array.isArray(raw)) arr = raw.map(x => (typeof x === 'string' ? x.replace(/\n/g, '<br>') : ''));
+        else if (typeof raw === 'string') arr = [raw.replace(/\n/g, '<br>')];
+        SC[k] = arr;
+        if (arr) try { localStorage.setItem('sf5_' + k, JSON.stringify(arr)); } catch (e) { }
+        return arr;
+      } catch (e) { SC[k] = null; return null; }
+    }
+    // Commentaries: fetched once per MISHNA (not per chapter). Sefaria can split a single
+    // mishna's commentary into several numbered segments (e.g. Bartenura_on_..._5.1.1,
+    // ..._5.1.2), and how those segments group together inside a whole-CHAPTER response
+    // isn't reliably predictable across different texts/chapters. Fetching directly at
+    // Tractate.chapter.mishna sidesteps that ambiguity entirely — Sefaria returns exactly
+    // that mishna's segment(s), which are then joined into one block.
+    async function _sfFetchCommentary(tractate, chapter, mishna, cmtKey) {
+      const k = tractate + '|' + chapter + '|' + mishna + '|' + cmtKey;
+      if (SC[k] !== undefined) return SC[k];
+      try {
+        const c = localStorage.getItem('sf5_' + k);
+        if (c !== null) { SC[k] = c; return SC[k]; }
+      } catch (e) { }
+      const en = SEFARIA_NAMES[tractate]; if (!en) { SC[k] = null; return null; }
+      const isAvot = en === 'Avot';
+      const cmt = CMTS.find(c => c.key === cmtKey);
+      if (!cmt) { SC[k] = null; return null; }
+      const ref = (isAvot && cmt.sfAvot) ? cmt.sfAvot : cmt.sfPrefix + '_' + en;
+      const url = 'https://www.sefaria.org/api/texts/' + ref + '.' + chapter + '.' + mishna + '?lang=he';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) { SC[k] = null; return null; }
+        const data = await res.json();
+        const raw = data.he;
+        let result = '';
+        if (Array.isArray(raw)) {
+          result = raw.map(x => Array.isArray(x) ? x.filter(s => s && s.trim()).join('<br><br>') : (typeof x === 'string' ? x : ''))
+                      .filter(s => s && s.trim()).join('<br><br>');
+        } else if (typeof raw === 'string') {
+          result = raw;
+        }
+        result = result.replace(/\n/g, '<br>');
+        SC[k] = result || null;
+        if (result) try { localStorage.setItem('sf5_' + k, result); } catch (e) { }
+        return SC[k];
+      } catch (e) { SC[k] = null; return null; }
+    }
+    // ============================================================
+    // DAY MODAL
+    // ============================================================
+    let _dmJDN = null;
+    function openDayModal(jdn) {
+      _dmJDN = jdn;
+      const g = HC.jdnToG(jdn), h = HC.jdnToH(jdn), dow = HC.dow(jdn);
+      document.getElementById('dmTitle').innerHTML = DH[dow] + ' · ' + fHebDate(h) + '<br>' + g.d + '/' + g.m + '/' + g.y;
+      _updDmBtn();
+      document.getElementById('dayModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('dmBody').innerHTML = '<div class="dm-loading">⏳ טוען טקסט מספריא...</div>';
+      loadDayContent(jdn);
+    }
+    function closeDayModal() {
+      document.getElementById('dayModal').classList.remove('show');
+      document.body.style.overflow = '';
+      _dmJDN = null;
+    }
+    function _updDmBtn() {
+      const btn = document.getElementById('dmDoneBtn'); if (!btn || !_dmJDN) return;
+      const d = !!S.done[_dmJDN];
+      btn.textContent = d ? '✓ נלמד' : '◻ סמן כנלמד';
+      btn.className = 'dm-done-btn' + (d ? ' done' : '');
+    }
+    function toggleDmDone() {
+      if (!_dmJDN) return;
+      if (S.done[_dmJDN]) delete S.done[_dmJDN]; else S.done[_dmJDN] = 1;
+      saveS(); _updDmBtn();
+      const sch = getDaySched(_dmJDN);
+      if (S.done[_dmJDN] && sch && sch.completed && (sch.completed.seder.length || sch.completed.tract.length)) {
+        closeDayModal();
+        if (sch.completed.seder.length) showCeleb(sch.completed.seder[0], 'seder');
+        else showCeleb(sch.completed.tract[0], 'tractate');
+        return;
+      }
+      render();
+    }
+    function toggleCmt(id) {
+      const el = document.getElementById(id); if (!el) return;
+      const open = el.classList.toggle('open');
+      const btn = el.previousElementSibling;
+      if (btn) { const a = btn.querySelector('.dm-arr'); if (a) a.textContent = open ? '▴' : '▾'; }
+    }
+    async function loadDayContent(jdn) {
+      const el = document.getElementById('dmBody'); if (!el) return;
+      const sch = getDaySched(jdn);
+      if (!sch) { el.innerHTML = '<p class="dm-empty">אין לימוד מתוכנן ביום זה</p>'; return; }
+      // Determine items and badge
+      let src = [], badge = '';
+      if (sch.type === 'unit-review') {
+        src = sch.revItems || [];
+        badge = 'חזרת ' + (sch.unitLevel === 'chapter' ? 'פרק' : sch.unitLevel === 'seder' ? 'סדר' : 'מסכת') + ': ' + sch.unitLabel;
+      } else if (sch.type === 'review') {
+        src = sch.revItems || [];
+        badge = 'חזרה תקופתית';
+      } else {
+        src = sch.items || [];
+        badge = 'לימוד יומי' + (sch.type === 'study+review' ? ' + חזרה' : '');
+      }
+      if (!src.length) { el.innerHTML = '<p class="dm-empty">אין פריטים להצגה</p>'; return; }
+      // Expand to mishna list
+      const mis = [];
+      if (S.pace.type === 'mishna') {
+        for (const it of src) mis.push({t: it.t, c: it.c, mi: it.mi});
+      } else {
+        for (const it of src) for (let mi = 1; mi <= it.cnt; mi++) mis.push({t: it.t, c: it.c, mi});
+      }
+      // Fetch all chapters in parallel for selected commentaries only
+      const activeCmts = CMTS.filter(c => S.commentaries[c.key]);
+      const needed = new Set();
+      for (const it of mis) needed.add(it.t + '|' + it.c);
+      const fetches = [];
+      for (const k of needed) {
+        const [t, c] = k.split('|');
+        fetches.push(_sfFetchMishnahText(t, +c));
+      }
+      for (const it of mis) {
+        for (const cmt of activeCmts) fetches.push(_sfFetchCommentary(it.t, it.c, it.mi, cmt.key));
+      }
+      await Promise.all(fetches);
+      // Build HTML
+      let html = '<div class="dm-badge">' + badge + '</div>';
+      let prevT = null;
+      for (const it of mis) {
+        if (it.t !== prevT) {
+          html += '<div class="dm-tract-hdr">מסכת ' + it.t + '</div>';
+          prevT = it.t;
+        }
+        const mArr = SC[it.t + '|' + it.c + '|mishna'];
+        const mTxt = (mArr && mArr[it.mi - 1]) || '';
+        const uid = 'dm_' + it.t.replace(/\s+/g,'') + '_' + it.c + '_' + it.mi;
+        html += '<div class="dm-mishna-block">';
+        html += '<div class="dm-mishna-ref">פרק ' + hn(it.c) + '׳ · משנה ' + hn(it.mi) + '׳</div>';
+        html += '<div class="dm-mishna-text">' + (mTxt || '<span class="dm-offline">⚠ לא נטען — בדוק חיבור לאינטרנט</span>') + '</div>';
+        // Show each selected commentary — fetched per-mishna directly, no chapter-relative
+        // indexing (that's what caused the earlier shift bug). If a fetch genuinely failed
+        // (wrong Sefaria title, 404, network issue) show a small visible note instead of
+        // silently showing nothing, so any remaining naming mistake is easy to spot.
+        for (const cmt of activeCmts) {
+          const txt = SC[it.t + '|' + it.c + '|' + it.mi + '|' + cmt.key];
+          const cmtId = uid + '_' + cmt.key;
+          if (txt) {
+            html += '<button class="dm-cmt-btn" onclick="toggleCmt(\'' + cmtId + '\')"><span class="dm-arr">▾</span> ' + cmt.label + '</button>';
+            html += '<div id="' + cmtId + '" class="dm-cmt-text">' + txt + '</div>';
+          } else {
+            html += '<div class="dm-offline" style="display:block;padding:4px 0">⚠ ' + cmt.label + ' — לא נמצא עבור משנה זו בספריא</div>';
+          }
+        }
+        // Kehati: no legal API/embed available — external deep-link only.
+        // Links to the dedicated commentary sub-page (not the plain reading page),
+        // which surfaces Kehati text with fewer taps once the user lands there.
+        if (S.commentaries.kehatiLink) {
+          const en = SEFARIA_NAMES[it.t] || it.t;
+          const kehatiURL = 'https://mishnah.app/en/resources/commentary/' + en + '.' + it.c + '.' + it.mi;
+          html += '<a class="dm-cmt-btn dm-kehati-link" href="' + kehatiURL + '">📖 פתח קהתי על משנה זו (חלון חיצוני)</a>';
+        }
+        html += '</div>';
+      }
+      if (el && _dmJDN === jdn) el.innerHTML = html;
+    }
+
     window.addEventListener('scroll', () => { const b = document.getElementById('topBtn'); if (b) b.style.display = window.scrollY > 180 ? 'flex' : 'none'; });
     render();
   </script>
